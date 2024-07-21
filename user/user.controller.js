@@ -6,6 +6,7 @@ import {
 } from "./user.validation.js";
 import User from "./user.model.js";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
 const router = express.Router();
 
@@ -70,7 +71,13 @@ router.post(
       return res.status(404).send({ message: "Invalid Credentials" });
     }
 
-    return res.status(200).send({ message: "Successful" });
+    //generate token
+    const payload = { email: user.email };
+    const sign = "hello";
+
+    const token = jwt.sign(payload, sign);
+
+    return res.status(200).send({ message: "Successful", token });
   }
 );
 
