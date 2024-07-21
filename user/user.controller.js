@@ -73,11 +73,11 @@ router.post(
 
     //generate token
     const payload = { email: user.email };
-    const sign = "hello";
+    const sign = process.env.ACCESS_TOKEN_SECRET_KEY;
 
     const token = jwt.sign(payload, sign);
 
-    return res.status(200).send({ message: "Successful", token });
+    return res.status(200).send({ message: "Successful", user, token });
   }
 );
 
