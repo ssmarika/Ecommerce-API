@@ -38,6 +38,7 @@ const userSchema = new mongoose.Schema({
     enum: ["buyer", "seller"],
   },
 });
+//helps to hide password or remove password when converting to JSON
 userSchema.methods.toJSON = function () {
   var obj = this.toObject(); //or var obj = this;
   delete obj.password;
