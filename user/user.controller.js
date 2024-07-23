@@ -1,5 +1,5 @@
 import express from "express";
-import validateReqBody from "../middleware/validation.js";
+import validateReqBody from "../middleware/validate.req.body.js";
 import {
   loginValidationSchema,
   userValidationSchema,
@@ -24,10 +24,10 @@ router.post(
     //extract the yser data
     const newUser = req.body;
     //find the user
-    const user = User.findOne({ email: newUser.email });
+    const user = await User.findOne({ email: newUser.email });
 
     //if not found throw error
-    if (!user) {
+    if (user) {
       return res.status(404).send({ message: "User already exits" });
     }
 
@@ -80,5 +80,7 @@ router.post(
     return res.status(200).send({ message: "Successful", user, token });
   }
 );
+
+// ? forgot password(3)
 
 export default router;
