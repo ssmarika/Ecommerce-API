@@ -1,6 +1,7 @@
 import express from "express";
 import connectDB from "./database-connection/db.connect.js";
 import UserRoutes from "./user/user.controller.js";
+import ProductRoutes from "./product/product.controller.js";
 
 const app = express();
 
@@ -12,6 +13,7 @@ await connectDB();
 
 //register routes
 app.use("/user", UserRoutes);
+app.use("/product", ProductRoutes);
 
 // enable CORS
 
