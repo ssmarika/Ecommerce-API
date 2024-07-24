@@ -152,13 +152,23 @@ router.post(
   validateReqBody(paginationData),
   async (req, res) => {
     //extract pagination data
-    const { page, limit } = req.body;
+    const { page, limit, searchText } = req.body;
 
     //calculate skip
+
     const skip = (page - 1) * limit;
 
+    //condition
+
+    let match = { sellerId: req.loggedInUserId };
+
+    if (searchText) {
+      match.name = { $regex: searchText, $options: "i" };
+    }
+    console.log(match);
+
     const products = await Product.aggregate([
-      { $match: { sellerId: req.loggedInUserId } },
+      { $match: match },
       { $skip: skip },
       { $limit: limit },
       {

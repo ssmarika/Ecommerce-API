@@ -15,4 +15,5 @@ export const addProductValidationSchema = Yup.object({
 export const paginationData = Yup.object({
   page: Yup.number().min(1).integer().default(DEFAULT_PAGE),
   limit: Yup.number().min(1).integer().default(DEFAULT_LIMIT),
+  searchText: Yup.string().trim().notRequired(),
 });
