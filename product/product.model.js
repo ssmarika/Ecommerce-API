@@ -56,9 +56,11 @@ const productSchema = new mongoose.Schema({
     default: null,
   },
 });
+
+//.lean() is used to convert the bson typr to json
 //hide or remove the seller id when converting into json form
 productSchema.methods.toJSON = function () {
-  var obj = this.toObject(); //or var obj = this;
+  var obj = this.toObject(); //or var obj = this;  this converts bson to json
   delete obj.sellerId;
   return obj;
 };

@@ -34,6 +34,8 @@ export const isUser = async (req, res, next) => {
     return res.status(401).send({ message: "unauthorized" });
   }
 
+  req.loggedInUserId = user._id;
+
   //call next function
   next();
 };
