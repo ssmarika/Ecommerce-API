@@ -1,33 +1,33 @@
-import express from "express";
+import express from 'express';
 import {
   isUser,
   isSeller,
   isBuyer,
-} from "../middleware/authentication.middleware.js";
-import validateReqBody from "../middleware/validate.req.body.js";
-import Product from "./product.model.js";
+} from '../middleware/authentication.middleware.js';
+import validateReqBody from '../middleware/validate.req.body.js';
+import Product from './product.model.js';
 import {
   addProductValidationSchema,
   paginationData,
-} from "./product.validation.js";
-import validateMongoIdFromParams from "../middleware/validate.mongoid.js";
-import checkMongoIdsEquality from "../utils/mongo.id.equality.js";
+} from './product.validation.js';
+import validateMongoIdFromParams from '../middleware/validate.mongoid.js';
+import checkMongoIdsEquality from '../utils/mongo.id.equality.js';
 
 const router = express.Router();
 
 //? list all product
 //different list for the buyer and seller
 
-router.get("/list", isUser, async (req, res) => {
+router.get('/list', isUser, async (req, res) => {
   const productDetails = await Product.find();
-  return res.status(200).send({ message: "list", productDetails });
+  return res.status(200).send({ message: 'list', productDetails });
 });
 
 //? add a product
 // only the seller can add the product
 
 router.post(
-  "/add",
+  '/add',
   isSeller,
   validateReqBody(addProductValidationSchema),
   async (req, res) => {
@@ -40,7 +40,7 @@ router.post(
     await Product.create(newProduct);
 
     // send res
-    return res.status(201).send({ message: "Product added successfully." });
+    return res.status(201).send({ message: 'Product added successfully.' });
   }
 );
 
@@ -48,7 +48,7 @@ router.post(
 // the seller who is also the owner can do this
 // id here is the product id
 router.delete(
-  "/delete/:id",
+  '/delete/:id',
   isSeller,
   validateMongoIdFromParams,
   async (req, res) => {
@@ -60,7 +60,7 @@ router.delete(
 
     // if not product, throw error
     if (!product) {
-      return res.status(404).send({ message: "Product does not exist" });
+      return res.status(404).send({ message: 'Product does not exist' });
     }
 
     // check if loggedIn is owner of the product
@@ -74,20 +74,20 @@ router.delete(
     if (!isProductOwner) {
       return res
         .status(403)
-        .send({ message: "You are not the owner of the product" });
+        .send({ message: 'You are not the owner of the product' });
     }
 
     //delete product
     await Product.findByIdAndDelete(productId);
 
     //send res
-    return res.status(200).send({ message: "Deleted" });
+    return res.status(200).send({ message: 'Deleted' });
   }
 );
 
 //? edit product
 router.put(
-  "/edit/:id",
+  '/edit/:id',
   isSeller,
   validateMongoIdFromParams,
   validateReqBody(addProductValidationSchema),
@@ -100,7 +100,7 @@ router.put(
 
     // if not product, throw error
     if (!product) {
-      return res.status(404).send({ message: "Product does not exist" });
+      return res.status(404).send({ message: 'Product does not exist' });
     }
 
     // check if loggedIn is owner of the product
@@ -114,7 +114,7 @@ router.put(
     if (!isProductOwner) {
       return res
         .status(403)
-        .send({ message: "You are not the owner of the product" });
+        .send({ message: 'You are not the owner of the product' });
     }
 
     //edit product
@@ -122,13 +122,13 @@ router.put(
     await Product.updateOne({ _id: productId }, { $set: { ...newProduct } });
 
     //send res
-    return res.status(200).send({ message: "Edited successfully" });
+    return res.status(200).send({ message: 'Edited successfully' });
   }
 );
 
 //? get product details
 router.get(
-  "/detail/:id",
+  '/detail/:id',
   isUser,
   validateMongoIdFromParams,
   async (req, res) => {
@@ -140,18 +140,18 @@ router.get(
 
     // if not product throw error
     if (!product) {
-      return res.status(404).send({ message: "Product not found" });
+      return res.status(404).send({ message: 'Product not found' });
     }
 
     //send res
-    return res.status(200).send({ message: "product detail", product });
+    return res.status(200).send({ message: 'product detail', product });
   }
 );
 
 //? list product by seller
 
 router.post(
-  "/seller/list",
+  '/seller/list',
   isSeller,
   validateReqBody(paginationData),
   async (req, res) => {
@@ -167,11 +167,11 @@ router.post(
     let match = { sellerId: req.loggedInUserId };
 
     if (searchText) {
-      match.name = { $regex: searchText, $options: "i" };
+      match.name = { $regex: searchText, $options: 'i' };
     }
     console.log(match);
 
-    const products = await Product.aggregate([
+    const productList = await Product.aggregate([
       { $match: match },
       { $skip: skip },
       { $limit: limit },
@@ -181,31 +181,37 @@ router.post(
           price: 1,
           brand: 1,
           image: 1,
-          description: { $substr: ["$description", 0, 200] }, //to limit the data being displayed
+          description: { $substr: ['$description', 0, 200] }, //to limit the data being displayed
         },
       },
     ]);
-    return res.status(200).send({ message: "Seller list", products });
+    return res.status(200).send({ message: 'Seller list', productList });
   }
 );
 
 //? list product by buyer
 router.post(
-  "/buyer/list",
+  '/buyer/list',
   isBuyer,
   validateReqBody(paginationData),
   async (req, res) => {
-    const { page, limit } = req.body;
+    const { page, limit, searchText } = req.body;
+
+    let match = {};
+
+    if (searchText) {
+      match = { name: { $regex: searchText, $options: 'i' } };
+    }
 
     const skip = (page - 1) * limit;
 
-    const product = await Product.aggregate([
-      { $match: {} },
+    const productList = await Product.aggregate([
+      { $match: match },
       { $skip: skip },
       { $limit: limit },
       { $project: { name: 1, brand: 1, price: 1, freeShipping: 1 } },
     ]);
-    return res.status(200).send({ Message: "List", product });
+    return res.status(200).send({ Message: 'Buyer List', productList });
   }
 );
 
